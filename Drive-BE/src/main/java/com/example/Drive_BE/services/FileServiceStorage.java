@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class FileServiceStorage {
 
     @Value("${file.upload-dir}")
-    private String uploadDir;
+    private String uploadDir;  //It injet the value of the property file.upoad-dir from the application.properties file into the uploaddir variable
 
     private final FileRepository fileRepository;
 
@@ -32,15 +32,25 @@ public class FileServiceStorage {
 
     public String saveFile(MultipartFile file, Long parentFolderId) throws IOException
     {
+        //adding the feature to check weather the file exist in the system or not
+        boolean exists = fileRepository.existsByNameAndParentFolderId(file.getOriginalFilename(), parentFolderId);
+
+        if (exists) {
+            throw new RuntimeException("A file with the same name already exists in this folder. Please rename the file.");
+        }
+
+
+        //old code
         Path uploadPath = Paths.get(uploadDir);
         if(!Files.exists(uploadPath))
         {
             Files.createDirectories(uploadPath);
         }
-
         String fileName = file.getOriginalFilename();
         Path filePath=uploadPath.resolve(fileName);
         Files.copy(file.getInputStream(),filePath, StandardCopyOption.REPLACE_EXISTING);
+
+
 
         //storing meta data in db
         FileEntity fileEntity = new FileEntity();
